@@ -5,6 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.hospitalmanagement.dto.DoctorDTO;
+import com.hospitalmanagement.dto.InsuranceDTO;
+import com.hospitalmanagement.dto.PatientDTO;
+import com.hospitalmanagement.entity.Doctor;
+import com.hospitalmanagement.entity.Insurance;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,6 +57,39 @@ public class PateintService {
 		List<Patient> lst = patientrepository.findAllPetient();
 		return lst;
 	}
-	
+
+	public PatientDTO assignInsuranceToPatient(
+			InsuranceDTO insurancedto,
+			Long patientId) {
+		System.out.println("insurance===============service called");
+		Patient patient = patientrepository
+				.findById(patientId)
+				.orElseThrow(() -> new EntityNotFoundException("patient not found with id : "+patientId));
+		System.out.println("insurance==============="+insurancedto);
+		System.out.println("patient==============="+patient);
+		Insurance insurance = convertClassType(insurancedto, Insurance.class);
+		patient.setInsurance(insurance);
+		insurance.setPatient(patient);
+        return convertClassType(patient, PatientDTO.class);
+
+
+	}
+
+//	private PatientDTO convertToDTO(Patient patient){
+//		PatientDTO patientdto = new PatientDTO();
+//		BeanUtils.copyProperties(patient,patientdto);
+//		System.out.println("9999999999999=============00000000000000"+patientdto);
+//		return patientdto;
+//	}
+
+	private <S, T> T convertClassType(S source, Class<T> targetClass) {
+		try {
+			T target = targetClass.getDeclaredConstructor().newInstance();
+			BeanUtils.copyProperties(source, target);
+			return target;
+		} catch (Exception e) {
+			throw new RuntimeException("Error while converting object", e);
+		}
+	}
 
 }
